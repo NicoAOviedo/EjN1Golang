@@ -10,19 +10,19 @@ import (
 
 func main() {
 
-	inputFileName := "input.txt"
-	outputFileName := "output.txt"
+	nombreArchivoEntrada := "input.txt"
+	nombreArchivoSalida := "output.txt"
 
-	file, err := os.Open(inputFileName)
+	archivo, err := os.Open(nombreArchivoEntrada)
 	if err != nil {
 		fmt.Println("Error al abrir el archivo:", err)
 		return
 	}
-	defer file.Close()
+	defer archivo.Close()
 
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(archivo)
 
-	output, err := os.Create(outputFileName)
+	output, err := os.Create(nombreArchivoSalida)
 	if err != nil {
 		fmt.Println("Error al crear el archivo de salida:", err)
 		return
@@ -43,37 +43,41 @@ func main() {
 		case 2:
 			lineaDineroTotal = linea
 
-			// fmt.Println("Lineas de precios :", lineaPrecios)
-			// fmt.Println("Lineas de dinero total:", lineaDineroTotal)
-			listaPrecios, err := convLineaPreciosALista(lineaPrecios) //falta usar el lista precios
+			listaPrecios, err := convLineaPreciosALista(lineaPrecios)
 			if err != nil {
 				fmt.Println("Error al convertir :", err)
 				return
 			}
-			dineroTotalInt, err := strconv.Atoi(lineaDineroTotal) //falta usar dinerototalint
+			dineroTotalInt, err := strconv.Atoi(lineaDineroTotal)
 			if err != nil {
 				fmt.Println("Error al convertir el string a int:", err)
 				return
 			}
 
-			sumaPrecios := sumarLista(listaPrecios)
+			valorMenor := 0
+			valorMayor := 0
+			valor1, valor2, encontrados := controlSuma(listaPrecios, dineroTotalInt)
 
-			if sumaPrecios == dineroTotalInt {
+			if valor1 < valor2 {
+				valorMenor = valor1
+				valorMayor = valor2
+			} else {
+				valorMenor = valor2
+				valorMayor = valor1
+			}
 
-				listaPreciosStr := convertirListaIntAStr(listaPrecios)
+			if encontrados {
+				valorMayorStr := strconv.Itoa(valorMayor)
+				valorMenorStr := strconv.Itoa(valorMenor)
 
-				listaPreciosConComa := strings.Join(listaPreciosStr, ", ")
+				lineaTxt := "Peter deberia comprar los libros de valor: " + valorMenorStr + " y " + valorMayorStr + "\n"
 
-				LineaTxt := "Peter deberia comprar los libros de valor: " + listaPreciosConComa + "\n"
-
-				_, err := output.WriteString(LineaTxt + "\n")
+				_, err := output.WriteString(lineaTxt + "\n")
 				if err != nil {
 					fmt.Println("No se pudo escrubir el archivo: ", err)
 					return
 				}
-
 			}
-
 		}
 		contadorLinea++
 
@@ -81,7 +85,6 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		fmt.Printf("Error al leer el archivo: %v\n", err)
 	}
-
 }
 
 func convLineaPreciosALista(s string) ([]int, error) {
@@ -99,12 +102,17 @@ func convLineaPreciosALista(s string) ([]int, error) {
 	return nums, nil
 }
 
-func sumarLista(lista []int) int {
-	suma := 0
-	for _, valor := range lista {
-		suma += valor
+func controlSuma(lista []int, valTotal int) (int, int, bool) {
+
+	for i := 0; i < len(lista); i++ {
+		for j := i + 1; j < len(lista); j++ {
+			if lista[i]+lista[j] == valTotal {
+				return lista[i], lista[j], true
+			}
+		}
 	}
-	return suma
+	return 0, 0, false
+
 }
 
 func convertirListaIntAStr(lista []int) []string {
